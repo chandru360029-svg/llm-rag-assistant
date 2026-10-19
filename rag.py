@@ -49,7 +49,7 @@ def build_graph():
     if not api_key or api_key == "your_groq_api_key_here":
         raise RuntimeError("Set your real GROQ_API_KEY in the .env file before asking document questions.")
 
-    model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
     llm = ChatGroq(model=model_name, api_key=api_key, temperature=0)
     prompt = ChatPromptTemplate.from_template(
         """You are an assistant for a furniture delivery service.
