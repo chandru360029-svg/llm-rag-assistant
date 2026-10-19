@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Furniture Delivery Assistant</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 32px auto; padding: 0 16px; color: #222; line-height: 1.5; background: #f7f7f7; }
+    h1 { margin-bottom: 4px; }
+    .subtitle { color: #555; margin-top: 0; }
+    section { background: white; padding: 22px; margin: 20px 0; border: 1px solid #ddd; border-radius: 10px; }
+    label { display: block; margin-top: 12px; font-weight: 600; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 5px; border: 1px solid #bbb; border-radius: 5px; font: inherit; }
+    textarea { min-height: 90px; }
+    button { margin-top: 16px; padding: 10px 16px; border: 0; border-radius: 5px; background: #174ea6; color: white; font-weight: 700; cursor: pointer; }
+    .error { background: #fff0f0; border: 1px solid #d99; padding: 12px; border-radius: 6px; }
+    .result { background: #f0f6ff; padding: 14px; border-radius: 6px; overflow-wrap: anywhere; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    ul { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <h1>Furniture Delivery Assistant</h1>
+  <p class="subtitle">Ask about delivery policies or calculate an estimated delivery and assembly charge.</p>
+
+  {% if error %}
+    <section class="error" role="alert"><strong>Unable to complete request:</strong> {{ error }}</section>
+  {% endif %}
+
+  <section>
+    <h2>Ask a document question</h2>
+    <form method="post">
+      <input type="hidden" name="action" value="ask">
+      <label for="question">Your question</label>
+      <textarea id="question" name="question" required placeholder="Example: Does assembly include wall drilling?">{{ question_value }}</textarea>
+      <button type="submit">Ask</button>
+    </form>
+    {% if answer %}
+      <h3>Answer</h3>
+      <div class="result">{{ answer }}</div>
+      <h3>Retrieved documents</h3>
+      {% if sources %}
+        <ul>{% for source in sources %}<li>{{ source }}</li>{% endfor %}</ul>
+      {% else %}
+        <p>No source filenames were returned.</p>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Estimate delivery charges</h2>
+    <p>Distances above 30 km require a manual quotation. This estimate does not schedule delivery or assembly.</p>
+    <form method="post">
+      <input type="hidden" name="action" value="estimate_delivery">
+      <div class="grid">
+        <div>
+          <label for="distance_km">Distance (km)</label>
+          <input id="distance_km" name="distance_km" type="number" min="0" step="any" required value="{{ form_values.distance_km }}">
+        </div>
+        <div>
+          <label for="item_count">Number of items</label>
+          <input id="item_count" name="item_count" type="number" min="1" step="1" required value="{{ form_values.item_count }}">
+        </div>
+        <div>
+          <label for="floor">Floor (ground floor = 0)</label>
+          <input id="floor" name="floor" type="number" min="0" step="1" required value="{{ form_values.floor }}">
+        </div>
+        <div>
+          <label for="lift_available">Is a lift available?</label>
+          <select id="lift_available" name="lift_available">
+            <option value="true" {% if form_values.lift_available == "true" %}selected{% endif %}>Yes</option>
+            <option value="false" {% if form_values.lift_available == "false" %}selected{% endif %}>No</option>
+          </select>
+        </div>
+        <div>
+          <label for="assembly_required">Assembly required?</label>
+          <select id="assembly_required" name="assembly_required">
+            <option value="false" {% if form_values.assembly_required == "false" %}selected{% endif %}>No</option>
+            <option value="true" {% if form_values.assembly_required == "true" %}selected{% endif %}>Yes</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit">Estimate charges</button>
+    </form>
+
+    {% if tool_result %}
+      <h3>Tool result</h3>
+      <div class="result">
+        <p><strong>Status:</strong> {{ tool_result.status }}</p>
+        {% if tool_result.status == "MANUAL_QUOTE_REQUIRED" %}
+          <p>A manual quotation is required. No total has been calculated.</p>
+        {% else %}
+          <ul>
+            <li>Base charge: ₹{{ "%.2f"|format(tool_result.base_charge) }}</li>
+            <li>Distance charge: ₹{{ "%.2f"|format(tool_result.distance_charge) }}</li>
+            <li>Carrying charge: ₹{{ "%.2f"|format(tool_result.carrying_charge) }}</li>
+            <li>Assembly charge: ₹{{ "%.2f"|format(tool_result.assembly_charge) }}</li>
+          </ul>
+          <p><strong>Total estimate: ₹{{ "%.2f"|format(tool_result.total) }}</strong></p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Example questions</h2>
+    <ul>
+      <li>Does assembly include wall drilling?</li>
+      <li>How soon should delivery damage be reported?</li>
+      <li>Where is my delivery vehicle?</li>
+    </ul>
+    <p><small>The assistant cannot track vehicles, approve refunds or replacements, schedule services, or decide whether furniture fits through an entrance.</small></p>
+  </section>
+</body>
+</html>

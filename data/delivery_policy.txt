@@ -1,0 +1,9 @@
+Standard delivery covers destinations within 30 kilometres of the store.
+
+Base delivery costs INR 500.
+
+Distances above 10 kilometres incur an additional INR 30 for each extra kilometre.
+
+If no lift is available, add INR 100 per item for each floor above the ground floor.
+
+Distances beyond 30 kilometres require a manual quotation.
